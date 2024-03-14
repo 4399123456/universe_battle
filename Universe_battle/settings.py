@@ -9,7 +9,6 @@ class Settings():
         self.scores_info()
         self.time_info()
         self.hero_info()
-        # self.enemy_hero_info()
         self.bullet_info()
         self.enemies_info()
         self.rock_info()
@@ -209,6 +208,7 @@ class Settings():
         self.pause_moment = os.path.join(os.path.join(os.getcwd(),"audio"),"pause_moment.mp3")
         self.background_music = os.path.join(os.path.join(os.getcwd(),"audio"),"background_music.mp3")
         self.recovery_life = os.path.join(os.path.join(os.getcwd(),"audio"),"recovery_life.mp3")
+        self.fall_music = os.path.join(os.path.join(os.getcwd(),"audio"),"fall_music.mp3")
 
     def scores_file_info(self):
         self.file_name = os.path.join(os.path.join(os.getcwd(),"high_scores.txt"))

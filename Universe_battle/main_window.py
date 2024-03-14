@@ -5,7 +5,6 @@ import game_logic as gl
 from Background import Background
 from settings import Settings
 
-
 setting = Settings()
 pygame.init()
 clock = pygame.time.Clock()

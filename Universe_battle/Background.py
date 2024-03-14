@@ -22,10 +22,6 @@ class Background():
     def move(self):
         self.x1 -= setting.bg_speed
         self.x2 -= setting.bg_speed
-        # if abs(self.x1 - 50) >= self.width:
-        #     self.x1 = self.width
-        # if abs(self.x2 - 50) >= self.width:
-        #     self.x2 = self.width
         if self.x1 <= -self.width:
             self.x1 = 0
         if self.x2 <= 0:

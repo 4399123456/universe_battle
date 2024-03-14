@@ -13,8 +13,6 @@ from Universe_Stuff import Universe_Stuff
 from Explosion import Explosion
 from Game_music import Game_Music
 from Game_Status import Game_Status
-import easygui
-
 
 setting = Settings()
 
@@ -27,14 +25,6 @@ hero_up = False
 hero_down = False
 hero_fire = False
 press_count = 0
-
-# alien_generation = False
-# enemy_generation = False
-# enemy_1_generation = False
-# enemy_2_generation = False
-# enemy_3_generation = False
-# hero_enemy_generation = False
-
 
 hero_bullets_group = pygame.sprite.Group()
 enemy_hero_bullets_group = pygame.sprite.Group()
@@ -54,15 +44,6 @@ small_rock_group = pygame.sprite.Group()
 recovery_group = pygame.sprite.Group()
 
 explosion_group = pygame.sprite.Group()
-
-
-# enemies start generation time
-# a_start_generation_time = time.time()
-# e_start_generation_time = time.time()
-# e1_start_generation_time = time.time()
-# e2_start_generation_time = time.time()
-# e3_start_generation_time = time.time()
-# eh_start_generation_time = time.time()
 
 start_generation_time = time.time()
 start_enemy_hero_fire_space = time.time()
@@ -85,7 +66,6 @@ def render_health(HEALTH):
     HEALTH.draw_health()
 
 def render_time(times,time):
-    # end_time = datetime.now()
     t = str(time).split(':')
     # fill numbers by zero when the number less than 10
     times.draw_info("Time: %02s:%02s" % (t[1],
@@ -200,20 +180,8 @@ def render_bullet():
             enemy_hero_bullets_group.remove(b1)
 
 def generation_enemies(screen):
-
-    # global a_start_generation_time,e_start_generation_time
-    # global e1_start_generation_time,e2_start_generation_time
-    # global e3_start_generation_time,eh_start_generation_time
-    #
-    # a_end_generation_time = time.time()
-    # e_end_generation_time = time.time()
-    # e1_end_generation_time = time.time()
-    # e2_end_generation_time = time.time()
-    # e3_end_generation_time = time.time()
-    # eh_end_generation_time = time.time()
     global start_generation_time
     end_generation_time = time.time()
-    # start_generation_time = end_generation_time
 
     if end_generation_time - start_generation_time >= setting.generation_space and \
         random.random() >= setting.alien_prob:
@@ -277,7 +245,6 @@ def draw_enemies(screen,enemy_shoot):
         e.move_sprite(-setting.enemy_speed,0)
         if e.x < -setting.window_width / 2:
             enemy_group.remove(e)
-
 
     for e1 in enemy_1_group:
         e1.draw_sprite()
@@ -395,14 +362,12 @@ def generation_recovery_flush(screen):
 def draw_universe_stuff():
     for big_rock in big_rock_group:
         big_rock.draw()
-        # big_rock.rotation()
         big_rock.move()
         if big_rock.x < -100 or big_rock.y > setting.window_height + 100:
             big_rock_group.remove(big_rock)
 
     for small_rock in small_rock_group:
         small_rock.draw()
-        # small_rock.rotation()
         small_rock.move()
         if small_rock.x < -100 or small_rock.y > setting.window_height + 100:
             small_rock_group.remove(small_rock)
@@ -472,18 +437,18 @@ def draw_explosion_when_time_up():
 
 # when hero get hurt
 def hero_damage(hero,enemies_group,HEALTH,hero_damage_func,screen,
-                bomb):
+                bomb,Game_status,fall):
     for enemy in enemies_group:
-        if hero.x >= enemy.x + 5 and hero.x <= enemy.x + enemy.width - 10 \
-            and hero.y >= enemy.y + 10 and hero.y <= enemy.y + enemy.height - 10:
-            hero_damage_func(screen,hero,enemy,HEALTH,bomb)
+        if hero.x >= enemy.x and hero.x <= enemy.x + enemy.width - 10 \
+            and hero.y >= enemy.y and hero.y <= enemy.y + enemy.height - 10:
+            hero_damage_func(screen,hero,enemy,HEALTH,bomb,Game_status,fall)
             return
-        if enemy.x >= hero.x + 5 and enemy.x <= hero.x + hero.width - 10 \
-                and enemy.y >= hero.y + 10 and enemy.y <= hero.y + hero.height - 10:
-            hero_damage_func(screen,hero, enemy, HEALTH,bomb)
+        if enemy.x >= hero.x and enemy.x <= hero.x + hero.width - 10 \
+                and enemy.y >= hero.y and enemy.y <= hero.y + hero.height - 10:
+            hero_damage_func(screen,hero, enemy, HEALTH,bomb,Game_status,fall)
             return
 
-def hero_with_enemies(screen,hero,enemy,HEALTH,bomb):
+def hero_with_enemies(screen,hero,enemy,HEALTH,bomb,Game_status,fall):
     if enemy.name == "alien":
         HEALTH.hero_life -= 1
         alien_group.remove(enemy)
@@ -502,23 +467,29 @@ def hero_with_enemies(screen,hero,enemy,HEALTH,bomb):
     explosion = Explosion(screen,enemy.x,enemy.y,setting.explosion_images)
     explosion_group.add(explosion)
     bomb.music_action()
-    # print("hit")
 
     if HEALTH.hero_life <= 0:
-        # setting.running = False
-        easygui.msgbox("Game Over!")
-
-
-def hero_with_enemy_bullet(screen,hero,bullet,HEALTH,bomb):
+        Game_status.is_over = True
+        Game_status.is_start = False
+        Game_status.is_pause = False
+        Game_status.is_running = False
+        draw_explosion_when_time_up()
+        fall.music_action()
+        return
+def hero_with_enemy_bullet(screen,hero,bullet,HEALTH,bomb,Game_status,fall):
     HEALTH.hero_life -= 1
     enemy_hero_bullets_group.remove(bullet)
 
     if HEALTH.hero_life <= 0:
-        # setting.running = False
-        easygui.msgbox("Game Over!")
+        Game_status.is_over = True
+        Game_status.is_start = False
+        Game_status.is_running = False
+        Game_status.is_pause = False
+        draw_explosion_when_time_up()
+        fall.music_action()
         return
 
-def hero_with_rock(screen,hero,rock,HEALTH,bomb):
+def hero_with_rock(screen,hero,rock,HEALTH,bomb,Game_status,fall):
     HEALTH.hero_life -= rock.attack
     if rock.name == "big_rock":
         big_rock_group.remove(rock)
@@ -530,11 +501,15 @@ def hero_with_rock(screen,hero,rock,HEALTH,bomb):
     bomb.music_action()
 
     if HEALTH.hero_life <= 0:
-        # setting.running = False
-        easygui.msgbox("Game Over!")
+        Game_status.is_over = True
+        Game_status.is_start = False
+        Game_status.is_running = False
+        Game_status.is_pause = False
+        draw_explosion_when_time_up()
+        fall.music_action()
         return
 
-def game_logical(screen,Game_status,BG1,getready,clock,start_music,background_music,fall,pause_moment):
+def game_logical(screen,Game_status,BG1,getready,clock,start_music,background_music,fall_music,pause_moment):
     global start_time
     HEALTH = Health(screen)
     scores = Game_Info(screen, setting.scores_size, setting.scores_color,
@@ -544,18 +519,12 @@ def game_logical(screen,Game_status,BG1,getready,clock,start_music,background_mu
     Hero_ship = Hero_Ship(screen, hero_ship_x, hero_ship_y, setting.hero_img_path,
                           setting.hero_life, "hero")
     hero_group.add(Hero_ship)
-    # background_music.music_action()
-    # hero_enemy_group.add(Enemy_Hero_Ship(screen,setting.window_width,100,setting.enemy_hero_img_path,setting.hero_enemy_life))
-    # enemy_3_group.add(Ship(screen,1000,250,setting.enemy_3_img_path,8))
     bomb = Game_Music(setting.bomb)
     enemy_shoot = Game_Music(setting.enemy_shoot_volume)
     hero_shoot = Game_Music(setting.hero_shoot_volume)
-    # moonlight = Game_Music(setting.main_music_2)
-    # playing = Game_Music(setting.main_music_1)
+    fall = Game_Music(setting.fall)
     rocket = Game_Music(setting.rocket)
     recovery_life = Game_Music(setting.recovery_life)
-    start_time = datetime.now()
-    cur_time = None
     is_pass_pause_time = False
 
     reset_start_time()
@@ -566,6 +535,17 @@ def game_logical(screen,Game_status,BG1,getready,clock,start_music,background_mu
 
         # render your game action here
         render_bg(BG1)
+
+        if is_pass_pause_time:
+            start_music.action = "stop"
+            start_music.music_action()
+            pause_moment.action = "stop"
+            pause_moment.music_action()
+            fall_music.action = "stop"
+            fall_music.music_action()
+            background_music.action = "play"
+            background_music.music_action()
+            is_pass_pause_time = False
 
         Hero_ship.draw_sprite()
         hero_action(screen, Hero_ship, hero_shoot)
@@ -624,37 +604,74 @@ def game_logical(screen,Game_status,BG1,getready,clock,start_music,background_mu
         reset_event_when_time_up()
         draw_explosion_when_time_up()
 
-        hero_damage(Hero_ship, alien_group, HEALTH, hero_with_enemies, screen, bomb)
-        hero_damage(Hero_ship, enemy_group, HEALTH, hero_with_enemies, screen, bomb)
-        hero_damage(Hero_ship, enemy_1_group, HEALTH, hero_with_enemies, screen, bomb)
-        hero_damage(Hero_ship, enemy_2_group, HEALTH, hero_with_enemies, screen, bomb)
-        hero_damage(Hero_ship, enemy_3_group, HEALTH, hero_with_enemies, screen, bomb)
+        hero_damage(Hero_ship, alien_group, HEALTH, hero_with_enemies, screen, bomb,Game_status,fall)
+        hero_damage(Hero_ship, enemy_group, HEALTH, hero_with_enemies, screen, bomb,Game_status,fall)
+        hero_damage(Hero_ship, enemy_1_group, HEALTH, hero_with_enemies, screen, bomb,Game_status,fall)
+        hero_damage(Hero_ship, enemy_2_group, HEALTH, hero_with_enemies, screen, bomb,Game_status,fall)
+        hero_damage(Hero_ship, enemy_3_group, HEALTH, hero_with_enemies, screen, bomb,Game_status,fall)
 
-        hero_damage(Hero_ship, enemy_hero_bullets_group, HEALTH, hero_with_enemy_bullet, screen, bomb)
+        hero_damage(Hero_ship, enemy_hero_bullets_group, HEALTH, hero_with_enemy_bullet, screen, bomb,Game_status,fall)
 
-        hero_damage(Hero_ship, big_rock_group, HEALTH, hero_with_rock, screen, bomb)
-        hero_damage(Hero_ship, small_rock_group, HEALTH, hero_with_rock, screen, bomb)
+        hero_damage(Hero_ship, big_rock_group, HEALTH, hero_with_rock, screen, bomb,Game_status,fall)
+        hero_damage(Hero_ship, small_rock_group, HEALTH, hero_with_rock, screen, bomb,Game_status,fall)
 
-        # if Game_status.game_status(BG1, getready, start_music, background_music, fall, pause_moment):
-        #     start_time = datetime.now()
-        #     start_generation_time = time.time()
-        #     start_rock_generation_time = time.time()
-        #     start_recovery_generation_time = time.time()
-        #     t_start = time.time()
-        #     h_start = time.time()
         if Game_status.is_pause:
             is_pass_pause_time = True
-            start_time = end_time - start_time
-            Game_status.game_status(BG1,getready,start_music,background_music,fall,pause_moment)
-            end_time = (start_time - diff_time)
+            start_music.action = "stop"
+            start_music.music_action()
+            background_music.action = "stop"
+            background_music.music_action()
+            fall_music.action = "stop"
+            fall_music.music_action()
+            pause_moment.action = "play"
+            pause_moment.music_action()
+
+            pause_time_1 = datetime.now()
+            Game_status.game_status(BG1, getready, start_music, background_music, fall_music, pause_moment)
+            pause_time_2 = datetime.now()
+            start_time = start_time + (pause_time_2 - pause_time_1)
+            reset_start_time()
+
 
         pygame.display.flip()
         clock.tick(setting.game_fps)
 
+
+def reset_stuff_to_init():
+    global hero_left,hero_right,hero_up,hero_down,hero_fire,press_count,\
+    start_time
+
+    hero_left = False
+    hero_right = False
+    hero_up = False
+    hero_down = False
+    hero_fire = False
+    press_count = 0
+
+    alien_group.empty()
+    enemy_group.empty()
+    enemy_1_group.empty()
+    enemy_2_group.empty()
+    enemy_3_group.empty()
+    hero_enemy_group.empty()
+    hero_bullets_group.empty()
+    enemy_hero_bullets_group.empty()
+    big_rock_group.empty()
+    small_rock_group.empty()
+    recovery_group.empty()
+    hero_group.empty()
+    explosion_group.empty()
+    bolt_gold_group.empty()
+    shield_gold_group.empty()
+    start_time = datetime.now()
+    reset_start_time()
+    write_scores()
+    setting.scores = 0
+    setting.hero_bullet_limit = 3
+
 def reset_start_time():
     global start_generation_time, start_rock_generation_time, \
     start_recovery_generation_time, t_start, h_start,start_time
-    # start_time = datetime.now()
     start_generation_time = time.time()
     start_rock_generation_time = time.time()
     start_recovery_generation_time = time.time()
@@ -670,12 +687,12 @@ def game_run(screen,clock):
 
     background_music = Game_Music(setting.background_music)
     start_music = Game_Music(setting.start_music)
-    fall = Game_Music(setting.fall)
+    fall_music = Game_Music(setting.fall_music)
     pause_moment = Game_Music(setting.pause_moment)
 
     background_music.is_repeat = True
     start_music.is_repeat = True
-    fall.is_repeat = True
+    fall_music.is_repeat = True
     pause_moment.is_repeat = True
 
 
@@ -690,46 +707,36 @@ def game_run(screen,clock):
             background_music.music_action()
             pause_moment.action = "stop"
             pause_moment.music_action()
-            fall.action = "stop"
-            fall.music_action()
+            fall_music.action = "stop"
+            fall_music.music_action()
+            Game_status.game_status(BG1, getready, start_music, background_music, fall_music, pause_moment)
 
-        elif Game_status.is_pause:
+        if Game_status.is_running:
             reset_start_time()
-            pause_moment.action = "play"
-            pause_moment.music_action()
-            start_music.action = "stop"
-            start_music.music_action()
-            background_music.action = "stop"
-            background_music.music_action()
-            fall.action = "stop"
-            fall.music_action()
-
-        elif Game_status.is_running:
-            reset_start_time()
-            pause_time = datetime.now()
             background_music.action = "play"
             background_music.music_action()
             start_music.action = "stop"
             start_music.music_action()
             pause_moment.action = "stop"
             pause_moment.music_action()
-            fall.action = "stop"
-            fall.music_action()
-            game_logical(screen,Game_status,BG1,getready,clock,start_music,background_music,fall,pause_moment)
+            fall_music.action = "stop"
+            fall_music.music_action()
+            game_logical(screen,Game_status,BG1,getready,clock,start_music,background_music,fall_music,pause_moment)
 
-        elif Game_status.is_over:
+        if Game_status.is_over:
             reset_start_time()
-            fall.action = "play"
-            fall.music_action()
             start_music.action = "stop"
             start_music.music_action()
             background_music.action = "stop"
             background_music.music_action()
             pause_moment.action = "stop"
             pause_moment.music_action()
+            fall_music.action = "play"
+            fall_music.music_action()
+            Game_status.game_status(BG1, getready, start_music, background_music, fall_music, pause_moment)
+            reset_stuff_to_init()
 
-        Game_status.game_status(BG1,getready,start_music,background_music,fall,pause_moment)
+        Game_status.game_status(BG1,getready,start_music,background_music,fall_music,pause_moment)
 
-        # pygame.display.flip()
 
 
